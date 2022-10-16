@@ -76,6 +76,6 @@ for x in range(len(dir_list)):
         startCol += 5
         startRow += 1
 
-wb.save("sample.xlsx")
+wb.save("CompiledDischargeFile.xlsx")
 
 # for i in range(len(lines)):
