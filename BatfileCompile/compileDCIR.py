@@ -13,13 +13,15 @@ for i in range(3):
     wb.create_sheet(sheetNames[i])
 wb.remove(ws)  # remove the default work sheet
 
-dir_list = os.listdir("BatFile")  # open folder containing the file
+dcir_text_directory = "DCIR_text"
+
+dir_list = os.listdir(dcir_text_directory)  # open folder containing the file
 
 startCol = 1  # starting column
 startRow = 2
 for x in range(len(dir_list)):
     if dir_list[x] != '.DS_Store':
-        file = open("BatFile/" + dir_list[x], encoding="ISO-8859-1")  # open file
+        file = open(dcir_text_directory + "/" + dir_list[x], encoding="ISO-8859-1")  # open file
 
     if file.name.endswith(".TXT"):
         lines = file.readlines()  # load each line into array
