@@ -21,22 +21,31 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
     battery_info = {
         'name': [],
         'dcir1': [],
-        'dcir2': []
+        'dcir2': [],
+        'box': [],
+        'ocv': [],
+        'capacity': []
     }
     battery_info_arr = []
 
     wb = pd.read_excel(io='Individual_Data.xlsx', sheet_name='Sheet1')
 
-    # Clumsily put name, dcir1, and dcir2 into an array with object elements
+    # Clumsily put name, dcir1, dcir2, box, ocv, and capacity into an array with object elements
     battery_info['name'] = list(wb['Cell'].to_numpy())
     battery_info['dcir1'] = list(wb['DCIR 1 (Idle-P1)'].to_numpy())
     battery_info['dcir2'] = list(wb['DCIR 2 (P1-P2)'].to_numpy())
+    battery_info['box'] = list(wb['Box'].to_numpy())
+    battery_info['ocv'] = list(wb['OCV'].to_numpy())
+    battery_info['capacity'] = list(wb['Capacity'].to_numpy())
 
     for i in range(len(battery_info['name'])):
         battery_info_arr.append({
             'name': battery_info['name'][i],
             'dcir1': battery_info['dcir1'][i],
-            'dcir2': battery_info['dcir2'][i]
+            'dcir2': battery_info['dcir2'][i],
+            'box': battery_info['box'][i],
+            'ocv': battery_info['ocv'][i],
+            'capacity': battery_info['capacity'][i]
         })
 
     # Filter out nan from battery_info_arr because sort doesn't like them
@@ -80,14 +89,20 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
 
     # Add the partitioned cells and their DCIR values into the workbook
     for i in range(len(partitioned_bat_info)):
-        partitioned_wb.active.cell(row=1, column=i*4 + 1).value = 'Group ' + str(i+1)
-        partitioned_wb.active.cell(row=2, column=i*4 + 1).value = 'Cell'
-        partitioned_wb.active.cell(row=2, column=i*4 + 2).value = 'DCIR 1 (Idle-P1)'
-        partitioned_wb.active.cell(row=2, column=i*4 + 3).value = 'DCIR 2 (P1-P2)'
+        partitioned_wb.active.cell(row=1, column=i*7 + 1).value = 'Group ' + str(i+1)
+        partitioned_wb.active.cell(row=2, column=i*7 + 1).value = 'Cell'
+        partitioned_wb.active.cell(row=2, column=i*7 + 2).value = 'Box'
+        partitioned_wb.active.cell(row=2, column=i*7 + 3).value = 'OCV'
+        partitioned_wb.active.cell(row=2, column=i*7 + 4).value = 'Capacity'
+        partitioned_wb.active.cell(row=2, column=i*7 + 5).value = 'DCIR 1 (Idle-P1)'
+        partitioned_wb.active.cell(row=2, column=i*7 + 6).value = 'DCIR 2 (P1-P2)'
         for j in range(len(partitioned_bat_info[i])):
-            partitioned_wb.active.cell(row=j+3, column=i*4 + 1).value = partitioned_bat_info[i][j]['name']
-            partitioned_wb.active.cell(row=j+3, column=i*4 + 2).value = partitioned_bat_info[i][j]['dcir1']
-            partitioned_wb.active.cell(row=j+3, column=i*4 + 3).value = partitioned_bat_info[i][j]['dcir2']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 1).value = partitioned_bat_info[i][j]['name']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 2).value = partitioned_bat_info[i][j]['box']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 3).value = partitioned_bat_info[i][j]['ocv']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 4).value = partitioned_bat_info[i][j]['capacity']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 5).value = partitioned_bat_info[i][j]['dcir1']
+            partitioned_wb.active.cell(row=j+3, column=i*7 + 6).value = partitioned_bat_info[i][j]['dcir2']
 
     partitioned_wb.save('Partitioned_Data.xlsx')
 
