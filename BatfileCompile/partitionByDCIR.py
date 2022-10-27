@@ -59,10 +59,9 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
 
     # Get the number of cells to keep
     arr_size = n_groups * group_size
-    arr_offset = int(np.floor((len(battery_info_arr) - arr_size) / 2))
 
-    # Remove any extra cells from the array
-    cut_down_bat_info_arr = battery_info_arr[arr_offset:(arr_offset + arr_size)]
+    # Keep only the lowest (according to sort_expression) arr_size cells in the array
+    cut_down_bat_info_arr = battery_info_arr[0:arr_size]
 
     # Partition the sorted cells into n_groups groups
     k, m = divmod(len(cut_down_bat_info_arr), n_groups)
