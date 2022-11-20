@@ -21,7 +21,7 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
 
     battery_info_arr = []
 
-    wb = pd.read_excel(io='Individual_Data.xlsx', sheet_name='Sheet1')
+    wb = pd.read_excel(io='Individual_Data.xlsx', sheet_name='OCV and Capacity Filtered')
 
     # Put name, dcir1, dcir2, box, ocv, and capacity into an array with object elements
     names = list(wb['Cell'].to_numpy())
