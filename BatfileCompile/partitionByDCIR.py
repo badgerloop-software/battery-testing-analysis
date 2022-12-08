@@ -31,14 +31,57 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
     ocvs = list(wb['OCV'].to_numpy())
     capacities = list(wb['Capacity'].to_numpy())
 
+    # Get info from cell tracker spreadsheet
+    box_wbs = []
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 1'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 2'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 3'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 4'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 5'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 6'))
+    box_wbs.append(pd.read_excel(io='Battery Cell Tracker_DCIR.xlsx', sheet_name='Box 7'))
+    
+    # Tracks the cell IDs within each group (individual lists) within each box
+    boxTracking = {
+        'box1': [],
+        'box2': [],
+        'box3': [],
+        'box4': [],
+        'box5': [],
+        'box6': [],
+        'box7': []
+    }
+    
+    # Add cell tracker information (lists of cell IDs for each group within each box) to boxTracking
+    for i in range(7):
+        for j in range(15):
+            boxTracking['box' + str(i+1)].append(list(box_wbs[i]['Group ' + str(j+1)]))
+   
+    # Add cell information to battery_info_arr
     for i in range(len(names)):
+        cell_number = -1
+        group_number = -1
+        
+	# Find group and cell number in tracker file
+        for j in range(15):
+            try:
+                cell_number = 1 + boxTracking['box' + str(boxes[i])][j].index(names[i])
+                # Cell was found, record its group number and stop searching
+                group_number = 1 + j
+                break
+            except ValueError:
+                # Cell wasn't found within the current group. Continue search with the next group
+                pass
+        
         battery_info_arr.append({
             'name': names[i],
             'dcir1': dcir1s[i],
             'dcir2': dcir2s[i],
             'box': boxes[i],
             'ocv': ocvs[i],
-            'capacity': capacities[i]
+            'capacity': capacities[i],
+            'group': group_number,
+            'cell': cell_number
         })
 
     # Make sure there are enough cells
@@ -80,22 +123,26 @@ def sort_and_partition_data(sort_expression, sort_first, sort_second, n_groups, 
 
     # Add the partitioned cells and their DCIR values into the workbook
     for i in range(len(partitioned_bat_info)):
-        partitioned_wb.active.cell(row=1, column=i*8 + 1).value = 'Group ' + str(i+1)
-        partitioned_wb.active.cell(row=2, column=i*8 + 1).value = 'Cell'
-        partitioned_wb.active.cell(row=2, column=i*8 + 2).value = 'Box'
-        partitioned_wb.active.cell(row=2, column=i*8 + 3).value = 'OCV'
-        partitioned_wb.active.cell(row=2, column=i*8 + 4).value = 'Capacity'
-        partitioned_wb.active.cell(row=2, column=i*8 + 5).value = 'DCIR 1 (Idle-P1)'
-        partitioned_wb.active.cell(row=2, column=i*8 + 6).value = 'DCIR 2 (P1-P2)'
-        partitioned_wb.active.cell(row=2, column=i*8 + 7).value = 'Avg(DCIR1, DCIR2)'
+        partitioned_wb.active.cell(row=1, column=i*10 + 1).value = 'Group ' + str(i+1)
+        partitioned_wb.active.cell(row=2, column=i*10 + 1).value = 'Cell ID'
+        partitioned_wb.active.cell(row=2, column=i*10 + 2).value = 'Box'
+        partitioned_wb.active.cell(row=2, column=i*10 + 3).value = 'Group (in Box)'
+        partitioned_wb.active.cell(row=2, column=i*10 + 4).value = 'Cell Number'
+        partitioned_wb.active.cell(row=2, column=i*10 + 5).value = 'OCV'
+        partitioned_wb.active.cell(row=2, column=i*10 + 6).value = 'Capacity'
+        partitioned_wb.active.cell(row=2, column=i*10 + 7).value = 'DCIR 1 (Idle-P1)'
+        partitioned_wb.active.cell(row=2, column=i*10 + 8).value = 'DCIR 2 (P1-P2)'
+        partitioned_wb.active.cell(row=2, column=i*10 + 9).value = 'Avg(DCIR1, DCIR2)'
         for j in range(len(partitioned_bat_info[i])):
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 1).value = partitioned_bat_info[i][j]['name']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 2).value = partitioned_bat_info[i][j]['box']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 3).value = partitioned_bat_info[i][j]['ocv']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 4).value = partitioned_bat_info[i][j]['capacity']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 5).value = partitioned_bat_info[i][j]['dcir1']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 6).value = partitioned_bat_info[i][j]['dcir2']
-            partitioned_wb.active.cell(row=j+3, column=i*8 + 7).value = (partitioned_bat_info[i][j]['dcir1'] + partitioned_bat_info[i][j]['dcir2']) / 2
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 1).value = partitioned_bat_info[i][j]['name']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 2).value = partitioned_bat_info[i][j]['box']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 3).value = partitioned_bat_info[i][j]['group']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 4).value = partitioned_bat_info[i][j]['cell']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 5).value = partitioned_bat_info[i][j]['ocv']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 6).value = partitioned_bat_info[i][j]['capacity']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 7).value = partitioned_bat_info[i][j]['dcir1']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 8).value = partitioned_bat_info[i][j]['dcir2']
+            partitioned_wb.active.cell(row=j+3, column=i*10 + 9).value = (partitioned_bat_info[i][j]['dcir1'] + partitioned_bat_info[i][j]['dcir2']) / 2
 
     partitioned_wb.save('Partitioned_Data.xlsx')
 
@@ -116,3 +163,4 @@ if __name__ == '__main__':
             sort_and_partition_data(lambda x: (x['dcir1'] + x['dcir2']) / 2, 'avg(DCIR 1, DCIR 2)', '', numModules, cellsInModule)
         except ValueError:
             print('Usage: `py partitionByDCIR.py <number of modules> <cells per module>`')
+
